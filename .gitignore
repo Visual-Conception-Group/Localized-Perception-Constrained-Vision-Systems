@@ -1,0 +1,8 @@
+OUTPUT/*
+*.pyc
+*.jpg
+*.png
+*.log
+*.logs
+*.pth
+*.out

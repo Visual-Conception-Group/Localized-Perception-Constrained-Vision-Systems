@@ -1,0 +1,28 @@
+exp_name: test
+
+model: unet
+# model: dlab
+
+# data: aerial
+data: drive
+
+model_type: full
+# model_type: down
+# model_type: pgd
+# model_type: pgd_global
+# model_type: tiled
+
+patch_size: 128
+# patch_size: 256
+
+batch_size: 4
+val_interval: 5
+num_epoch: 100
+
+# EVALUATION PARAMETERS
+model1_path: None
+model2_path: None
+
+
+
+
