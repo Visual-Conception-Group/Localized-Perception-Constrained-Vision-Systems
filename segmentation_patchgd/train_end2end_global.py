@@ -1,16 +1,11 @@
-from src.models.patchgd_models import Identity, z_block_v1 as z_block
-from src.models.base_unet_model import build_unet
 from src.models.loss import DiceBCELoss
-
+from src.patchgd.patchgd_utils import fill_z, merge_patches, sample_k_patches, combine_global
 from src.utils import (
     create_dir,
     run_test_on_model,
     plot_graph,
     epoch_time,
-    load_checkpoint,
 )
-
-from src.patchgd.patchgd_utils import fill_z, merge_patches, sample_k_patches, combine_global
 
 from common_utils import load_data, get_models, eval_load_checkpoint
 import torch 
@@ -29,16 +24,15 @@ def new_print(*args):
 print = new_print
 
 """
-LOADING CONFIG
-LOADING DATASET
-LOADING MODEL AND CHECKPOINT
-train()
-- train_one_epoch_patchgd()
-- train_one_epoch_singlemodel()
-evaluate()
-run_on_images()
-infer_model()
-- get_per_patch_prediction()
+Load Config
+Load Data
+train_one_epoch_patchgd
+train_one_epoch_single_model
+evaluate
+train
+get_per_patch_prediction
+run_on_images
+infer_model
 """
 
 from main_config import CFG
@@ -302,7 +296,6 @@ def evaluate(loader):
     epoch_loss = epoch_loss/size
     return epoch_loss   
 
-
 def train():
     train_losses, valid_losses, best_valid_loss, best_epoch = [], [], float("inf"), 0
     train_loss, valid_loss = 0, 0
@@ -356,14 +349,11 @@ def train():
         if optimizer2 is not None: torch.save(model2.state_dict(), f"{op_dir}/last_m2_{checkpoint_name}_{epoch}_{valid_loss}.pth")
     print("MODEL TRAINING COMPLETED")
 
-
 def get_per_patch_prediction(model, inputs, patch_side, feature_size, show_lines=False):
     # BREAK IMAGE INTO PATCHES
     # GET FEATURES OF EACH PATCH
     # MERGE IT TO CREATE A IMAGE
     # IMAGE PATCH WILL FIT IN GPU, BY SUB-BATCHING
-    import torch.nn.functional as F
-    import torchvision
 
     # 1. GENERATE FEATURE FOR EACH PATCH
     b_img_patches, b_img_patches_feats = fill_z(

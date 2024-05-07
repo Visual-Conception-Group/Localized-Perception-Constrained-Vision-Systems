@@ -2,7 +2,6 @@ import os
 import torch
 import random
 import time
-import json 
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -12,12 +11,33 @@ from glob import glob
 from tqdm import tqdm 
 from torchviz import make_dot
 
-from operator import add
-# import sys
-# sys.path.append('codes/unetv4/')
 from src.patchgd.patchgd_utils import run_patch_model, get_patches, batch_patches
-# from patchgd.patchgd_module import Identity, patch_process, z_block_v4 as z_block, final_model, patch_process_func
-from src.metrics import get_extended_stats, analyse_extended_scores, get_metrics, calculate_metrics, analyse_scores
+from src.metrics import get_extended_stats, analyse_extended_scores, get_metrics,  analyse_scores
+
+"""
+All Functions 
+
+plot_graph
+seeding
+create_dir
+epoch_time
+load_checkpoint
+get_stats
+mask_parse
+
+preprocess_image
+preprocess_mask
+postprocess_pred
+add_text
+write_image
+
+plot_z_channels
+get_zmetrics_mean
+run_test_on_model
+freeze_model
+load_config
+get_computational_graph
+"""
 
 def plot_graph(train_losses, valid_losses, path):
     plt.plot(train_losses, color='orange')
@@ -50,76 +70,12 @@ def create_dir(path, safety=True):
         else:
             print(f"!!! Replacing the Files !!!  [{path}]")
 
-            
 def epoch_time(start_time, end_time):
     """ Calculate the time taken """
     elapsed_time = end_time - start_time
     elapsed_mins = int(elapsed_time / 60)
     elapsed_secs = int(elapsed_time - (elapsed_mins * 60))
     return elapsed_mins, elapsed_secs
-
-def train(model, loader, optimizer, loss_fn, device):
-    epoch_loss = 0.0
-
-    model.train()
-    for x, y in tqdm(loader):
-        x = x.to(device, dtype=torch.float32)
-        y = y.to(device, dtype=torch.float32)
-
-        optimizer.zero_grad()
-        y_pred = model(x)
-        loss = loss_fn(y_pred, y)
-        loss.backward()
-        optimizer.step()
-        epoch_loss += loss.item()
-
-    # add gradient accumulation step also
-    """
-    # but we have created more batches, so it should work
-    # only when batch size is 1 - this need to be added
-    
-    loss.backward(retain_graph=True)
-    if (j+1) % constants.accumulationSteps == 0:
-        optimizer.step() 
-    """
-    epoch_loss = epoch_loss/len(loader)
-    return epoch_loss
-
-def evaluate(model, loader, loss_fn, device):
-    epoch_loss = 0.0
-    print("Validation Started")
-
-    model.eval()
-    metrics_score = [0.0, 0.0, 0.0, 0.0, 0.0]
-    count = 0
-
-    with torch.no_grad():
-        for x, y in tqdm(loader):
-            x = x.to(device, dtype=torch.float32)
-            y = y.to(device, dtype=torch.float32)
-
-            y_pred = model(x)
-            loss = loss_fn(y_pred, y)
-            epoch_loss += loss.item()
-
-            for iy_pred, iy in zip(y_pred, y):
-                count+=1
-                iy_pred = iy_pred.unsqueeze(dim=0)
-                iy = iy.unsqueeze(dim=0)
-                pred_y = torch.sigmoid(iy_pred)
-                score = calculate_metrics(iy, pred_y)
-                metrics_score = list(map(add, metrics_score, score))
-
-        jaccard = metrics_score[0]/count
-        f1 = metrics_score[1]/count
-        recall = metrics_score[2]/count
-        precision = metrics_score[3]/count
-        acc = metrics_score[4]/count
-
-        epoch_loss = epoch_loss/len(loader)
-        print(f"Jaccard: {jaccard:1.4f} - F1: {f1:1.4f} - Recall: {recall:1.4f} - Precision: {precision:1.4f} - Acc: {acc:1.4f} - Count: {count}")
-    return epoch_loss
-
 
 def load_checkpoint(path, model):
     state_dict = torch.load(path)
@@ -128,8 +84,6 @@ def load_checkpoint(path, model):
     model.eval()
     return model
 
-
-
 def get_stats(x):
     try:
         x = np.array(x)
@@ -137,20 +91,9 @@ def get_stats(x):
         x = x.detach().cpu().numpy()
     print("Stats:", np.min(x), np.max(x), np.unique(x))
 
-
 def mask_parse(mask):
     mask = np.expand_dims(mask, axis=-1)    ## (512, 512, 1)
     mask = np.concatenate([mask, mask, mask], axis=-1)  ## (512, 512, 3)
-    return mask
-
-def xx_process_mask(mask):
-    H = 512
-    W = 512
-    size = (W, H)
-    print("ip:", mask.shape, end=' ')
-    mask = cv2.resize(mask, size)
-    print("op:", mask.shape)
-    mask = mask/255.0
     return mask
 
 def preprocess_image(path, op_size, ip_size):

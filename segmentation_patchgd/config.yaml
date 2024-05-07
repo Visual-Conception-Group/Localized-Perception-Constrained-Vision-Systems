@@ -22,7 +22,3 @@ num_epoch: 100
 # EVALUATION PARAMETERS
 model1_path: None
 model2_path: None
-
-
-
-

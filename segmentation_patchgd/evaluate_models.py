@@ -1,7 +1,6 @@
 from main_config import CFG as config
-from common_utils import load_data, get_models, eval_load_checkpoint
+from common_utils import get_models, eval_load_checkpoint
 import torch
-import os
 from src.utils import (
     run_test_on_model,
     seeding

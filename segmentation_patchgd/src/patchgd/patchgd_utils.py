@@ -7,16 +7,15 @@ import torchvision
 import time 
 
 """
+combine_global
 sample_k_patches - get k patches out of all patches
 merge patches - create a image out of patches
 batch_patches - from grid of patch to batch of patch 
 get_patches - create patches from image
 infer_model - run inference with pre post processing
-sub_batch - 64 patches are heavy for gpu, process & merge mini batches 
-fill_z - extract features, put it in z matrix
+fill_z - extract features, put it in z matrix, sub_batch - 64 patches are heavy for gpu, process & merge mini batches 
 run_patch_model - to get results from two models at once
-train_patch_model - training with inner iteration, augmentation
-evaluate_patch_model - evaluate without inner iterations
+count_parameters
 """
 
 def combine_global(batch_z_matrix, global_feat_resized, method='add'):
@@ -165,7 +164,6 @@ def fill_z(model, inputs, patch_side, device='cuda', feature_size=64, per_batch 
         img_patches_feats.append(batch_patch_op_matrix.unsqueeze(0))
 
     return torch.concatenate(img_patches), torch.concatenate(img_patches_feats)
-
 
 def run_patch_model(model1, model2, x, y=None, patch_side=4, device='cuda', feature_size=None, use_global_feat=False, method=None, ip_size=None, patch_size=None, verbose=False):
     loss_fn = DiceBCELoss()

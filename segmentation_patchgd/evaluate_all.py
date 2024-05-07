@@ -49,7 +49,4 @@ for folder in folders:
     except Exception as e:
         raise e
         # print(f"===ERROR - {e} - {cfg_path, m1_path, m2_path}")
-
     # exit()
-
-
