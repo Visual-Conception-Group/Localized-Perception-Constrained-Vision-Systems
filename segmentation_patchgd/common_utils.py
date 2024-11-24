@@ -28,9 +28,25 @@ def load_data(config):
         transforms=transformations,
         n_patch_split=config.data_split_patch_side,
     )
-    print(f"Data Loader: {len(train_loader), len(valid_loader)} | Data Split: {config.data_split_patch_side}")
-    print("==> Data Loaded Successfully")
+
+    use_dummy_data = False
+    # DUMMY DATA LOADER, IF DATA NOT PRESENT
+    if use_dummy_data:
+        x = torch.rand((4, 3, 512, 512))
+        y = torch.rand((4, 1, 512, 512))
+        loader = [(x,y), (x,y), (x,y), (x,y)]
+        train_loader = loader
+        valid_loader = loader
     # exit()
+
+    print(f"Data Loader: {len(train_loader), len(valid_loader)} | Data Split: {config.data_split_patch_side}")
+    
+    if len(train_loader)==0 or len(valid_loader)==0:
+        print("==> Data Not Loaded")
+        exit()
+    else:
+        print("==> Data Loaded Successfully")
+
     return train_loader, valid_loader
 
 def get_models(config):

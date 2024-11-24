@@ -227,6 +227,7 @@ def train_one_epoch_single_model(loader, epoch_str=""):
     model1.train()
     for x, y in tqdm(loader):
         if len(x)==1:
+            # batch norm requires batch of 2 atleast
             continue
 
         x = x.to(device, dtype=torch.float32) # can be batched image
@@ -318,6 +319,7 @@ def train():
         valid_loss = evaluate(valid_loader)
         if epoch % val_interval==0:
             if save_files:
+                # Comment/ Disable if Test Data not Present
                 run_on_images(epoch)
                 # SAVING EVERY EPOCH MODEL
                 if optimizer1 is not None: torch.save(model1.state_dict(), f"{model_op_dir}/m1_{checkpoint_name}_{epoch}_{valid_loss}.pth")
