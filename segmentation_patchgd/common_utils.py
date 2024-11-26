@@ -30,6 +30,7 @@ def load_data(config):
     )
 
     use_dummy_data = False
+    # use_dummy_data = True
     # DUMMY DATA LOADER, IF DATA NOT PRESENT
     if use_dummy_data:
         x = torch.rand((4, 3, 512, 512))

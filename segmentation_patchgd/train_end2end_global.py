@@ -452,6 +452,60 @@ def infer_model(img_path, op_path=None, write=False):
 
 ################################[ TRAINING ]####################################
 
+def benchmark_infer_model():
+    """
+    it gets the broken image as parts for evaluation if there. 
+    same batch size as training
+    """
+    batch = 1
+    channel = 3
+    x = torch.rand((batch, channel, config.ip_size, config.ip_size))
+    x = x.to(device, dtype=torch.float32) # can be batched image
+    print("Input:", x.shape)
+
+    model1.eval()
+    model2.eval()
+
+    start = time.time()
+    with torch.no_grad():
+        # y_pred = model1(img) # [1, 1, 512, 512] # DEFAULT INFERENCE OF SINGLE IMAGE
+        Z_mat = get_per_patch_prediction(
+            model=model1,
+            inputs=x,
+            patch_side=config.patch_side,
+            feature_size=config.feature_size,
+        )
+        Z_mat = Z_mat.to(device)
+
+        if config.model_type == "pgd_global":
+            if config.global_feat:
+                resizedImage = torchvision.transforms.Resize( size=(config.patch_size, config.patch_size))(x)
+                global_feat = model1(resizedImage)['out']
+                global_feat_resized = torchvision.transforms.Resize( size=(config.ip_size, config.ip_size))(global_feat)
+                Z_mat = combine_global(Z_mat, global_feat_resized, method=config.global_method)
+        print("Z_mat:", Z_mat.shape)
+        y_pred = model2(Z_mat)
+
+    print("Output:", y_pred.shape)
+    end = time.time() - start
+    return end
+
+def benchmark():
+    fps_record = []
+    try: 
+        for i in range(1000):
+            time_taken = benchmark_infer_model()
+            fps = 1/time_taken
+            print(f"Time Taken: {time_taken} FPS: {fps}")
+            fps_record.append(fps)
+    except KeyboardInterrupt as e:
+        pass
+        
+    avg_fps = sum(fps_record)/len(fps_record)
+    print("\n\n\n\n\n")
+    print("Average FPS:", avg_fps)
+
+
 """
 ONLY TRAINING THE MODEL 2
 IRRESPECTIVE OF MODEL 1
@@ -464,7 +518,7 @@ infer it - train the model 2
     
 if __name__=="__main__":
     train()
-
+    # benchmark()
     
     # img_path = "retina/test/image/0.png"
     # mask, op_path = infer_model(
